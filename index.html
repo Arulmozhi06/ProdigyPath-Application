@@ -1,0 +1,136 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Dashboard from './components/Dashboard';
+import VocabularyLessons from './components/VocabularyLessons';
+import SpeechLessons from './components/SpeechLessons';
+import PronunciationLessons from './components/PronunciationLessons';
+import PracticeTests from './components/PracticeTests';
+import TestReports from './components/TestReports';
+import Login from './components/Login';
+
+function App() {
+  return (
+    <Router>
+      <div className="container mt-4">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/vocabulary" element={<VocabularyLessons />} />
+          <Route path="/speech" element={<SpeechLessons />} />
+          <Route path="/pronunciation" element={<PronunciationLessons />} />
+          <Route path="/practice" element={<PracticeTests />} />
+          <Route path="/reports" element={<TestReports />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+function Dashboard() {
+  return (
+    <div>
+      <h1 className="mb-4">Welcome to Your English Training Dashboard</h1>
+      <nav>
+        <ul className="list-group">
+          <li className="list-group-item"><Link to="/vocabulary">Vocabulary Lessons</Link></li>
+          <li className="list-group-item"><Link to="/speech">Speech Lessons</Link></li>
+          <li className="list-group-item"><Link to="/pronunciation">Pronunciation Lessons</Link></li>
+          <li className="list-group-item"><Link to="/practice">Practice Tests</Link></li>
+          <li className="list-group-item"><Link to="/reports">Test Reports</Link></li>
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
+export default Dashboard;
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function VocabularyLessons() {
+  const [lessons, setLessons] = useState([]);
+
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/vocabulary-lessons', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setLessons(response.data);
+      } catch (error) {
+        console.error('Error fetching lessons:', error);
+      }
+    };
+    fetchLessons();
+  }, []);
+
+  return (
+    <div>
+      <h2 className="mb-4">Vocabulary Lessons</h2>
+      <ul className="list-group">
+        {lessons.map(lesson => (
+          <li key={lesson.id} className="list-group-item">
+            <h3>{lesson.title}</h3>
+            <p>{lesson.description}</p>
+            <p>Difficulty: {lesson.difficulty}</p>
+            <button className="btn btn-primary">Start Lesson</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default VocabularyLessons;
+
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', { email, password });
+      localStorage.setItem('token', response.data.token);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4">
+      <div className="mb-3">
+        <input
+          type="email"
+          className="form-control"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <input
+          type="password"
+          className="form-control"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          required
+        />
+      </div>
+      <button type="submit" className="btn btn-primary">Login</button>
+    </form>
+  );
+}
+
+export default Login;
